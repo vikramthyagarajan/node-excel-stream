@@ -1,0 +1,28 @@
+{
+  "name": "node-excel-stream",
+  "version": "1.0.0",
+  "description": "A utility to help reading and writing excels using streams",
+  "main": "main.js",
+  "scripts": {
+    "test": "mocha test/**/**.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vikramthyagarajan/node-excel-stream.git"
+  },
+  "keywords": [
+    "node",
+    "excel",
+    "stream",
+    "exceljs",
+    "write",
+    "read",
+    "parse"
+  ],
+  "author": "Vikram Thyagarajan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/vikramthyagarajan/node-excel-stream/issues"
+  },
+  "homepage": "https://github.com/vikramthyagarajan/node-excel-stream#readme"
+}
