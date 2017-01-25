@@ -22,6 +22,7 @@ import { ExcelReader, ExcelWriter } from 'node-excel-stream';
 Workbooks must be given a schema before they are parsed. If the excel format does not match the given schema, then an error is thrown. Then, each row in each sheet can be parsed using the eachRow function, which returns a promise when resolves after all rows are parsed.
 
 Input: data.xlsx, Sheet: Users
+
 | User Name | Value |
 |:----------|:-----:|
 | John | 10 |
@@ -110,6 +111,7 @@ Promise.all(dataPromises)
 
 Output:
 Input: data.xlsx, Sheet: Test Sheet
+
 | Test Name | Test Coverage |
 |:----------|:-----:|
 | Test 1 | 100 |
