@@ -36,7 +36,7 @@ let reader = new ExcelReader(dataStream, {
     sheets: [{
         name: 'Users',
         allowedValues: ['Users'],
-        rows: [{
+        rows: {
             headerRow: 1,
             allowedHeaders: [{
                 text: 'User Name',
@@ -46,7 +46,7 @@ let reader = new ExcelReader(dataStream, {
                 key: 'value',
                 type: Number
             }]
-        }]
+        }
     }]
 })
 console.log('starting parse');
