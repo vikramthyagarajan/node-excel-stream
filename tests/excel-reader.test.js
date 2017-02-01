@@ -12,7 +12,7 @@ describe('Excel Reader', () => {
         testWorkbooks.multiSheetNRowHeader = fs.createReadStream(__dirname + '/util/excels/2sheet-nheader.xlsx');
     });
     describe('Sheets', () => {
-        it('should error if different number of Sheets', (done) => {
+        it('should error if different number of Sheets', () => {
             let reader = new ExcelReader(testWorkbooks.singleSheetFirstRowHeader, {
                 sheets: [{
                     name: 'Data',
@@ -20,50 +20,50 @@ describe('Excel Reader', () => {
                     name: 'Test'
                 }]
             })
-            reader.eachRow()
+            return reader.eachRow()
             .then(() => {
                 done('Reader must exit with an error');
             })
             .catch((err) => {
                 expect(err).to.be.an('error');
                 expect(err.message).to.equal(/invalid number of sheets/i);
-                done();
             });
         });
     });
 
     describe('Allowed Sheet Names', () => {
         it('should be an array or null', () => {
-            let hasToThrow = function() {
-                new ExcelReader(testWorkbooks.singleSheetFirstRowHeader, {
-                    sheets: [{
-                        allowedNames: 'dkfjkdj'
-                    }]
-                });
-            }
-            expect(hasToThrow).to.throw(/should be an array/);
+            let reader = new ExcelReader(testWorkbooks.singleSheetFirstRowHeader, {
+                sheets: [{
+                    allowedNames: 'dkfjkdj'
+                }]
+            });
+            return reader.eachRow()
+            .then(() => {
+                done('Validation should give an error');
+            })
+            .catch((err) => {
+                expect(err).to.be.an('error');
+                expect(err.message).to.match(/"allowedNames" must be an array/);
+            })
         });
 
-        it('should only allow selected sheet names', (done) => {
+        it('should only allow selected sheet names', () => {
             let reader = new ExcelReader(testWorkbooks.singleSheetFirstRowHeader, {
                 sheets: [{
                     allowedNames: ['Data']
                 }]
             });
-            reader.eachRow()
-            .then(() => {
-                done();
-            })
-            .catch(done);
+            return reader.eachRow();
         });
 
-        it('should throw error if invalid sheet name is in excel', (done) => {
+        it('should throw error if invalid sheet name is in excel', () => {
             let reader = new ExcelReader(testWorkbooks.singleSheetFirstRowHeader, {
                 sheets: [{
                     allowedNames: ['Incorrect Sheet']
                 }]
             });
-            reader.eachRow()
+            return reader.eachRow()
             .then(() => {
                 done('Reader must throw error');
             })
@@ -73,17 +73,13 @@ describe('Excel Reader', () => {
             });
         });
 
-        it('should allow any name if allowedNames is null', (done) => {
+        it('should allow any name if allowedNames is null', () => {
             let reader = new ExcelReader(testWorkbooks.singleSheetFirstRowHeader, {
                 sheets: [{
                     allowedNames: null
                 }]
             });
-            reader.eachRow()
-            .then(() => {
-                done();
-            })
-            .catch(done);
+            return reader.eachRow();
         });
     });
 
@@ -152,13 +148,9 @@ describe('Excel Reader', () => {
                     total: '50'
                 }];
 
-            reader.eachRow((rowData, rowNum) => {
+            return reader.eachRow((rowData, rowNum) => {
                 expect(rowData).to.eql(output[rowNum - 1]);
-            })
-            .then(() => {
-                done();
-            })
-            .catch(done);
+            });
         });
 
         it('should take header row from config', (done) => {
@@ -195,13 +187,9 @@ describe('Excel Reader', () => {
                     y: '57'
             }];
 
-            reader.eachRow((rowData, rowNum) => {
+            return reader.eachRow((rowData, rowNum) => {
                 expect(rowData).to.eql(output[rowNum - 1]);
-            })
-            .then(() => {
-                done();
-            })
-            .catch(done);
+            });
         });
         
         it('should return each row data for multiple sheets', (done) => {
@@ -289,11 +277,7 @@ describe('Excel Reader', () => {
 
             reader.eachRow((rowData, rowNum, sheetKey) => {
                 expect(rowData).to.eql(output[sheetKey][rowNum - 1]);
-            })
-            .then(() => {
-                done();
-            })
-            .catch(done);
+            });
         });
     });
 });
