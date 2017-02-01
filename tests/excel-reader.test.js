@@ -8,10 +8,11 @@ let testWorkbooks = {};
 describe('Excel Reader', () => {
     before(() => {
         testWorkbooks.singleSheetFirstRowHeader = fs.createReadStream('./util/excels/1sheet-1header.xlsx');
+        testWorkbooks.singleSheetNRowHeader = fs.createReadStream('./util/excels/1sheet-nheader.xlsx');
+        testWorkbooks.multiSheetNRowHeader = fs.createReadStream('./util/excels/2sheet-nheader.xlsx');
     });
     describe('Sheets', () => {
         it('should error if different number of Sheets', (done) => {
-            let workbook = testWorkbooks.singleSheetFirstRowHeader;
             let reader = new ExcelReader(testWorkbooks.singleSheetFirstRowHeader, {
                 sheets: [{
                     name: 'Data',
@@ -25,38 +26,271 @@ describe('Excel Reader', () => {
             })
             .catch((err) => {
                 expect(err).to.exist();
+                expect(err.message).to.match(/invalid number of sheets/i);
             });
         });
     });
 
     describe('Allowed Sheet Names', () => {
-        it('should be an array', () => {
+        it('should be an array or null', () => {
+            let hasToThrow = ExcelReader.bind(null, testWorkbooks.singleSheetFirstRowHeader, {
+                sheets: [{
+                    allowedNames: 'dkfjkdj'
+                }]
+            });
+            expect(hasToThrow).to.throw(/should be an array/);
         });
 
-        it('should only allow selected sheet names', () => {
+        it('should only allow selected sheet names', (done) => {
+            let reader = new ExcelReader(testWorkbooks.singleSheetFirstRowHeader, {
+                sheets: [{
+                    allowedNames: ['Data']
+                }]
+            });
+            reader.eachRow()
+            .then(() => {
+                done();
+            })
+            .catch(done);
         });
 
-        it('should throw error if invalid sheet name is in excel', () => {
+        it('should throw error if invalid sheet name is in excel', (done) => {
+            let reader = new ExcelReader(testWorkbooks.singleSheetFirstRowHeader, {
+                sheets: [{
+                    allowedNames: ['Incorrect Sheet']
+                }]
+            });
+            reader.eachRow()
+            .then(() => {
+                done('Reader must throw error');
+            })
+            .catch((err) => {
+                expect(err).to.exist();
+                expect(err.message).to.match(/invalid sheet name/i);
+            });
         });
 
-        it('should allow any name if allowedNames is null', () => {
+        it('should allow any name if allowedNames is null', (done) => {
+            let reader = new ExcelReader(testWorkbooks.singleSheetFirstRowHeader, {
+                sheets: [{
+                    allowedNames: null
+                }]
+            });
+            reader.eachRow()
+            .then(() => {
+                done();
+            })
+            .catch(done);
         });
     });
 
     describe('Rows', () => {
-        it('should error if header row does not exist in excel', () => {
-        });
+        it('should assume default header row', (done) => {
+            let reader = new ExcelReader(testWorkbooks.singleSheetFirstRowHeader, {
+                sheets: [{
+                    name: 'Data',
+                    rows: {
+                        allowedHeaders: [{
+                            name: 'Sr No',
+                            key: 'index'
+                        }, {
+                            name: 'Name',
+                            key: 'name'
+                        }, {
+                            name: 'X Value',
+                            key: 'x'
+                        }, {
+                            name: 'Y Value',
+                            key: 'y'
+                        }, {
+                            name: 'Z Value',
+                            key: 'z'
+                        }, {
+                            name: 'Total',
+                            key: 'total'
+                        }]
+                    }
+                }]
+            });
+            let output = [{
+                index: '1',
+                name: 'First Entry',
+                x: '25',
+                y: '30',
+                z: '45',
+                total: '100'
+                }, {
+                    index: '2',
+                    name: 'Second Entry',
+                    x: '20',
+                    y: '20',
+                    z: '20',
+                    total: '60'
+                }, {
+                    index: '3',
+                    name: 'Third Entry',
+                    x: '15',
+                    y: '10',
+                    z: '8',
+                    total: '33'
+                }, {
+                    index: '4',
+                    name: 'Fourth Entry',
+                    x: '22',
+                    y: '39',
+                    z: '65',
+                    total: '126'
+                }, {
+                    index: '5',
+                    name: 'Fifth Entry',
+                    x: '42',
+                    y: '8',
+                    z: 'invalid num',
+                    total: '50'
+                }];
 
-        it('should assume default header row', () => {
+            reader.eachRow((rowData, rowNum) => {
+                expect(rowData).to.eql(output[rowNum - 1]);
+            })
+            .then(() => {
+                done();
+            })
+            .catch(done);
         });
 
         it('should take header row from config', () => {
+            let reader = new ExcelReader(testWorkbooks.singleSheetNRowHeader, {
+                sheets: [{
+                    name: 'Data',
+                    rows: {
+                        headerRow: 6,
+                        allowedHeaders: [{
+                            name: 'Sr No',
+                            key: 'index'
+                        }, {
+                            name: 'Name',
+                            key: 'name'
+                        }, {
+                            name: 'X Value',
+                            key: 'x'
+                        }, {
+                            name: 'Y Value',
+                            key: 'y'
+                        }]
+                    }
+                }]
+            });
+            let output = [{
+                    index: '1',
+                    name: 'First Entry',
+                    x: '6',
+                    y: '68'
+                }, {
+                    index: '2',
+                    name: 'Second Entry',
+                    x: '34',
+                    y: '57'
+            }];
+
+            reader.eachRow((rowData, rowNum) => {
+                expect(rowData).to.eql(output[rowNum - 1]);
+            })
+            .then(() => {
+                done();
+            })
+            .catch(done);
         });
         
-        it('should only allow specified header rows', () => {
-        });
+        it('should return each row data for multiple sheets', () => {
+            let reader = new ExcelReader(testWorkbooks.multiSheetNRowHeader, {
+                sheets: [{
+                    name: 'First Sheet',
+                    key: 'sheet1',
+                    rows: {
+                        headerRow: 4,
+                        allowedHeaders: [{
+                            name: 'Sr No',
+                            key: 'index'
+                        }, {
+                            name: 'Name',
+                            key: 'name'
+                        }, {
+                            name: 'X Value',
+                            key: 'x'
+                        }, {
+                            name: 'Y Value',
+                            key: 'y'
+                        }, {
+                            name: 'Total',
+                            key: 'total'
+                        }]
+                    }
+                }, {
+                    name: 'Second Sheet',
+                    key: 'sheet2',
+                    rows: {
+                        headerRow: 3,
+                        allowedHeaders: [{
+                            name: 'Name',
+                            key: 'name'
+                        }, {
+                            name: 'Z Value',
+                            key: 'x'
+                        }, {
+                            name: 'Total',
+                            key: 'total'
+                        }]
+                    }
+                }]
+            });
+            let output = {
+                sheet1: [{
+                        index: '1',
+                        name: 'First Entry',
+                        x: '25',
+                        y: '5',
+                        total: '30'
+                    }, {
+                        index: '2',
+                        name: 'Second Entry',
+                        x: '20',
+                        y: '20',
+                        total: '40'
+                    }, {
+                        index: '3',
+                        name: 'Third Entry',
+                        x: '15',
+                        y: '10',
+                        total: '25'
+                    }, {
+                        index: '4',
+                        name: 'Fourth Entry',
+                        x: '22',
+                        y: 'error',
+                        total: '22'
+                }],
+                sheet2: [{
+                        name: 'First Entry',
+                        z: '43',
+                        total: '73'
+                    }, {
+                        name: 'Second Entry',
+                        z: '77',
+                        total: '117'
+                    }, {
+                        name: 'Second Entry',
+                        z: '51',
+                        total: '76'
+                }]
+            };;
 
-        it('should return each row data based on header row keys', () => {
+            reader.eachRow((rowData, rowNum, sheetKey) => {
+                expect(rowData).to.eql(output[sheetKey][rowNum - 1]);
+            })
+            .then(() => {
+                done();
+            })
+            .catch(done);
         });
     });
 });
