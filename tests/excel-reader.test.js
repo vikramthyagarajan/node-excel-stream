@@ -46,6 +46,12 @@ describe('Excel Reader', () => {
     describe('Rows', () => {
         it('should error if header row does not exist in excel', () => {
         });
+
+        it('should assume default header row', () => {
+        });
+
+        it('should take header row from config', () => {
+        });
         
         it('should only allow specified header rows', () => {
         });
