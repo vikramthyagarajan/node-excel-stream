@@ -30,6 +30,8 @@
     "mocha": "^3.2.0"
   },
   "dependencies": {
-    "exceljs": "^0.2.39"
+    "bluebird": "^3.4.7",
+    "exceljs": "^0.2.39",
+    "joi": "^10.2.0"
   }
 }
