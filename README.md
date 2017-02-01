@@ -35,14 +35,14 @@ let dataStream = fs.createReadStream('data.xlsx');
 let reader = new ExcelReader(dataStream, {
     sheets: [{
         name: 'Users',
-        allowedValues: ['Users'],
+        allowedNames: ['Users'],
         rows: {
             headerRow: 1,
             allowedHeaders: [{
-                text: 'User Name',
+                name: 'User Name',
                 key: 'userName'
             }, {
-                text: 'Value',
+                name: 'Value',
                 key: 'value',
                 type: Number
             }]
@@ -86,10 +86,10 @@ let writer = new ExcelWriter({
         name: 'Test Sheet',
         key: 'tests',
         headers: [{
-            text: 'Test Name',
+            name: 'Test Name',
             key: 'name'
         }, {
-            text: 'Test Coverage',
+            name: 'Test Coverage',
             key: 'testValue',
             default: 0
         }]
