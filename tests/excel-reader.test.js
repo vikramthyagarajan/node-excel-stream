@@ -7,9 +7,9 @@ const fs = require('fs');
 let testWorkbooks = {};
 describe('Excel Reader', () => {
     before(() => {
-        testWorkbooks.singleSheetFirstRowHeader = fs.createReadStream('./util/excels/1sheet-1header.xlsx');
-        testWorkbooks.singleSheetNRowHeader = fs.createReadStream('./util/excels/1sheet-nheader.xlsx');
-        testWorkbooks.multiSheetNRowHeader = fs.createReadStream('./util/excels/2sheet-nheader.xlsx');
+        testWorkbooks.singleSheetFirstRowHeader = fs.createReadStream(__dirname + '/util/excels/1sheet-1header.xlsx');
+        testWorkbooks.singleSheetNRowHeader = fs.createReadStream(__dirname + '/util/excels/1sheet-nheader.xlsx');
+        testWorkbooks.multiSheetNRowHeader = fs.createReadStream(__dirname + '/util/excels/2sheet-nheader.xlsx');
     });
     describe('Sheets', () => {
         it('should error if different number of Sheets', (done) => {
@@ -25,19 +25,22 @@ describe('Excel Reader', () => {
                 done('Reader must exit with an error');
             })
             .catch((err) => {
-                expect(err).to.exist();
-                expect(err.message).to.match(/invalid number of sheets/i);
+                expect(err).to.be.an('error');
+                expect(err.message).to.equal(/invalid number of sheets/i);
+                done();
             });
         });
     });
 
     describe('Allowed Sheet Names', () => {
         it('should be an array or null', () => {
-            let hasToThrow = ExcelReader.bind(null, testWorkbooks.singleSheetFirstRowHeader, {
-                sheets: [{
-                    allowedNames: 'dkfjkdj'
-                }]
-            });
+            let hasToThrow = function() {
+                new ExcelReader(testWorkbooks.singleSheetFirstRowHeader, {
+                    sheets: [{
+                        allowedNames: 'dkfjkdj'
+                    }]
+                });
+            }
             expect(hasToThrow).to.throw(/should be an array/);
         });
 
@@ -158,7 +161,7 @@ describe('Excel Reader', () => {
             .catch(done);
         });
 
-        it('should take header row from config', () => {
+        it('should take header row from config', (done) => {
             let reader = new ExcelReader(testWorkbooks.singleSheetNRowHeader, {
                 sheets: [{
                     name: 'Data',
@@ -201,7 +204,7 @@ describe('Excel Reader', () => {
             .catch(done);
         });
         
-        it('should return each row data for multiple sheets', () => {
+        it('should return each row data for multiple sheets', (done) => {
             let reader = new ExcelReader(testWorkbooks.multiSheetNRowHeader, {
                 sheets: [{
                     name: 'First Sheet',

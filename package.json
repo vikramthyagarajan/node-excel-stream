@@ -4,7 +4,7 @@
   "description": "A utility to help reading and writing excels using streams",
   "main": "index.js",
   "scripts": {
-    "test": "mocha test/**/**.js"
+    "test": "mocha tests/**/**.js"
   },
   "repository": {
     "type": "git",
