@@ -35,7 +35,6 @@ let dataStream = fs.createReadStream('data.xlsx');
 let reader = new ExcelReader(dataStream, {
     sheets: [{
         name: 'Users',
-        allowedNames: ['Users'],
         rows: {
             headerRow: 1,
             allowedHeaders: [{
