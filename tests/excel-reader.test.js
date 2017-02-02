@@ -16,8 +16,10 @@ describe('Excel Reader', () => {
             let reader = new ExcelReader(testWorkbooks.singleSheetFirstRowHeader(), {
                 sheets: [{
                     name: 'Data',
+                    rows:{}
                 }, {
-                    name: 'Test'
+                    name: 'Test',
+                    rows:{}
                 }]
             })
             return reader.eachRow()
@@ -82,8 +84,8 @@ describe('Excel Reader', () => {
     });
 
     describe('Rows', () => {
-        it('should assume default header row', (done) => {
-            let reader = new ExcelReader(testWorkbooks.singleSheetFirstRowHeader, {
+        it('should assume default header row', () => {
+            let reader = new ExcelReader(testWorkbooks.singleSheetFirstRowHeader(), {
                 sheets: [{
                     name: 'Data',
                     rows: {
@@ -110,40 +112,40 @@ describe('Excel Reader', () => {
                 }]
             });
             let output = [{
-                index: '1',
+                index: 1,
                 name: 'First Entry',
-                x: '25',
-                y: '30',
-                z: '45',
-                total: '100'
+                x: 25,
+                y: 30,
+                z: 45,
+                total: 100
                 }, {
-                    index: '2',
+                    index: 2,
                     name: 'Second Entry',
-                    x: '20',
-                    y: '20',
-                    z: '20',
-                    total: '60'
+                    x: 20,
+                    y: 20,
+                    z: 20,
+                    total: 60
                 }, {
-                    index: '3',
+                    index: 3,
                     name: 'Third Entry',
-                    x: '15',
-                    y: '10',
-                    z: '8',
-                    total: '33'
+                    x: 15,
+                    y: 10,
+                    z: 8,
+                    total: 33
                 }, {
-                    index: '4',
+                    index: 4,
                     name: 'Fourth Entry',
-                    x: '22',
-                    y: '39',
-                    z: '65',
-                    total: '126'
+                    x: 22,
+                    y: 39,
+                    z: 65,
+                    total: 126
                 }, {
-                    index: '5',
+                    index: 5,
                     name: 'Fifth Entry',
-                    x: '42',
-                    y: '8',
+                    x: 42,
+                    y: 8,
                     z: 'invalid num',
-                    total: '50'
+                    total: 50
                 }];
 
             return reader.eachRow((rowData, rowNum) => {
@@ -151,8 +153,8 @@ describe('Excel Reader', () => {
             });
         });
 
-        it('should take header row from config', (done) => {
-            let reader = new ExcelReader(testWorkbooks.singleSheetNRowHeader, {
+        it('should take header row from config', () => {
+            let reader = new ExcelReader(testWorkbooks.singleSheetNRowHeader(), {
                 sheets: [{
                     name: 'Data',
                     rows: {
@@ -174,15 +176,15 @@ describe('Excel Reader', () => {
                 }]
             });
             let output = [{
-                    index: '1',
+                    index: 1,
                     name: 'First Entry',
-                    x: '6',
-                    y: '68'
+                    x: 6,
+                    y: 68
                 }, {
-                    index: '2',
+                    index: 2,
                     name: 'Second Entry',
-                    x: '34',
-                    y: '57'
+                    x: 34,
+                    y: 57
             }];
 
             return reader.eachRow((rowData, rowNum) => {
@@ -190,8 +192,8 @@ describe('Excel Reader', () => {
             });
         });
         
-        it('should return each row data for multiple sheets', (done) => {
-            let reader = new ExcelReader(testWorkbooks.multiSheetNRowHeader, {
+        it('should return each row data for multiple sheets', () => {
+            let reader = new ExcelReader(testWorkbooks.multiSheetNRowHeader(), {
                 sheets: [{
                     name: 'First Sheet',
                     key: 'sheet1',
@@ -234,42 +236,42 @@ describe('Excel Reader', () => {
             });
             let output = {
                 sheet1: [{
-                        index: '1',
+                        index: 1,
                         name: 'First Entry',
-                        x: '25',
-                        y: '5',
-                        total: '30'
+                        x: 25,
+                        y: 5,
+                        total: 30
                     }, {
-                        index: '2',
+                        index: 2,
                         name: 'Second Entry',
-                        x: '20',
-                        y: '20',
-                        total: '40'
+                        x: 20,
+                        y: 20,
+                        total: 40
                     }, {
-                        index: '3',
+                        index: 3,
                         name: 'Third Entry',
-                        x: '15',
-                        y: '10',
-                        total: '25'
+                        x: 15,
+                        y: 10,
+                        total: 25
                     }, {
-                        index: '4',
+                        index: 4,
                         name: 'Fourth Entry',
-                        x: '22',
+                        x: 22,
                         y: 'error',
-                        total: '22'
+                        total: 22
                 }],
                 sheet2: [{
                         name: 'First Entry',
-                        z: '43',
-                        total: '73'
+                        z: 43,
+                        total: 73
                     }, {
                         name: 'Second Entry',
-                        z: '77',
-                        total: '117'
+                        z: 77,
+                        total: 117
                     }, {
                         name: 'Second Entry',
-                        z: '51',
-                        total: '76'
+                        z: 51,
+                        total: 76
                 }]
             };;
 
