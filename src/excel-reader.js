@@ -2,6 +2,7 @@
 const Excel = require('exceljs');
 const Joi = require('joi');
 const Promise = require('bluebird');
+const _ = require('lodash');
 
 class ExcelReader {
 	/**
@@ -68,49 +69,55 @@ class ExcelReader {
 		// checks the workbook with the options specified
 		// Used for error checking. Will give errors otherwise
 		const sheetOptions = this.options.sheets;
-		const rowOptions = this.options.rows;
-		let total = 0, defaultSheet, names = [], headerNames = [];
+		// const rowOptions = this.options.rows;
+        let isValid = true, lastMessage = '';
 
 		// collecting sheet stats
 		this.workbook.eachSheet((worksheet, sheetId) => {
-			total++;
-			names.push(worksheet.name);
-			if (rowOptions.headerRow) {
-				let row = worksheet.getRow(rowOptions.headerRow);
-				headerNames = _.remove(row.values, null);
-			}
+            let name = worksheet.name;
+            let sheetSchema = _.find(sheetOptions, {name: name});
+            let boolean, message = this._checkSheet(worksheet, sheetSchema);
+            if (!boolean) {
+                isValid = boolean;
+                lastMessage = message;
+            }
 		});
 
-		// checking sheet stats
-		let boolean = true, lastMessage = '';
-		if (sheetOptions.total && total !== sheetOptions.total) {
-			lastMessage = 'Total number of sheets must be ', sheetOptions.total;
-			boolean = false;
-		}
-		if (sheetOptions.allowedNames && !_.chain(names).difference(sheetOptions.allowedNames).isEmpty().value()) {
-			lastMessage = 'Only these sheet names are allowed: ' + sheetOptions.allowedNames;
-			boolean = false;
-		}
-		if (rowOptions && rowOptions.headerRow && rowOptions.allowedHeaders) {
-			const allowedHeaderNames = _.map(rowOptions.allowedHeaders, 'text');
-			if (!_.chain(headerNames).difference(allowedHeaderNames).isEmpty().value()) {
-				lastMessage = 'The row ' + rowOptions.headerRow + ' must contain headers. Only these header values are allowed: ' + allowedHeaderNames;
-				boolean = false;
-			}
-		}
-
 		// after all checks, if boolean is false, then throw
-		if (!boolean) {
+		if (!isValid) {
 			throw this._dataError(lastMessage);
 		}
 	}
 
+    /** 
+     * Checks a worksheet against its schema to make sure sheet is valid
+     */
+    _checkSheet(worksheet, sheetOptions) {
+        let isValid = true, lastMessage = '';
+        if (!sheetOptions || !sheetOptions.rows) {
+            isValid = false;
+            lastMessage = 'Schema not found for sheet ' + worksheet.name;
+        }
+        else if (_.isNumber(sheetOptions.rows.headerRow) && sheetOptions.rows.allowedHeaders) {
+            let rowOptions = sheetOptions.rows;
+            let row = worksheet.getRow(rowOptions.headerRow);
+            headerNames = _.remove(row.values, null);
+			const allowedHeaderNames = _.map(rowOptions.allowedHeaders, 'name');
+			if (!_.chain(headerNames).difference(allowedHeaderNames).isEmpty().value()) {
+				lastMessage = 'The row ' + rowOptions.headerRow + ' must contain headers. Only these header values are allowed: ' + allowedHeaderNames;
+				isValid = false;
+			}
+		}
+
+        return isValid, lastMessage;
+    }
+
 	_dataError(message) {
-		return new Boom.badData(message);
+		return new Error(message);
 	}
 
 	_internalError(message) {
-		return new Boom.badImplementation('error while parsing excel file' + message);
+		return new Error('error while parsing excel file' + message);
 	}
 
 	getDefaultSheet() {
