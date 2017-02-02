@@ -7,13 +7,13 @@ const fs = require('fs');
 let testWorkbooks = {};
 describe('Excel Reader', () => {
     before(() => {
-        testWorkbooks.singleSheetFirstRowHeader = fs.createReadStream(__dirname + '/util/excels/1sheet-1header.xlsx');
-        testWorkbooks.singleSheetNRowHeader = fs.createReadStream(__dirname + '/util/excels/1sheet-nheader.xlsx');
-        testWorkbooks.multiSheetNRowHeader = fs.createReadStream(__dirname + '/util/excels/2sheet-nheader.xlsx');
+        testWorkbooks.singleSheetFirstRowHeader = () => fs.createReadStream(__dirname + '/util/excels/1sheet-1header.xlsx');
+        testWorkbooks.singleSheetNRowHeader = () => fs.createReadStream(__dirname + '/util/excels/1sheet-nheader.xlsx');
+        testWorkbooks.multiSheetNRowHeader = () => fs.createReadStream(__dirname + '/util/excels/2sheet-nheader.xlsx');
     });
     describe('Sheets', () => {
         it('should error if different number of Sheets', () => {
-            let reader = new ExcelReader(testWorkbooks.singleSheetFirstRowHeader, {
+            let reader = new ExcelReader(testWorkbooks.singleSheetFirstRowHeader(), {
                 sheets: [{
                     name: 'Data',
                 }, {
@@ -22,18 +22,18 @@ describe('Excel Reader', () => {
             })
             return reader.eachRow()
             .then(() => {
-                done('Reader must exit with an error');
+                throw 'Reader must exit with an error';
             })
             .catch((err) => {
                 expect(err).to.be.an('error');
-                expect(err.message).to.equal(/invalid number of sheets/i);
+                expect(err.message).to.match(/Schema not found/i);
             });
         });
     });
 
     describe('Allowed Sheet Names', () => {
         it('should be an array or null', () => {
-            let reader = new ExcelReader(testWorkbooks.singleSheetFirstRowHeader, {
+            let reader = new ExcelReader(testWorkbooks.singleSheetFirstRowHeader(), {
                 sheets: [{
                     allowedNames: 'dkfjkdj'
                 }]
@@ -49,37 +49,35 @@ describe('Excel Reader', () => {
         });
 
         it('should only allow selected sheet names', () => {
-            let reader = new ExcelReader(testWorkbooks.singleSheetFirstRowHeader, {
+            let reader = new ExcelReader(testWorkbooks.singleSheetFirstRowHeader(), {
                 sheets: [{
-                    allowedNames: ['Data']
-                }]
-            });
-            return reader.eachRow();
-        });
-
-        it('should throw error if invalid sheet name is in excel', () => {
-            let reader = new ExcelReader(testWorkbooks.singleSheetFirstRowHeader, {
-                sheets: [{
-                    allowedNames: ['Incorrect Sheet']
+                    name: 'Data'
                 }]
             });
             return reader.eachRow()
             .then(() => {
-                done('Reader must throw error');
+                throw new Error('Reader must throw error');
             })
             .catch((err) => {
-                expect(err).to.exist();
-                expect(err.message).to.match(/invalid sheet name/i);
+                expect(err).to.be.an('error');
+                expect(err.message).to.match(/Schema not found/);
             });
         });
 
-        it('should allow any name if allowedNames is null', () => {
-            let reader = new ExcelReader(testWorkbooks.singleSheetFirstRowHeader, {
+        it('should throw error if invalid sheet name is in excel', () => {
+            let reader = new ExcelReader(testWorkbooks.singleSheetFirstRowHeader(), {
                 sheets: [{
-                    allowedNames: null
+                    name: 'Incorrect Sheet'
                 }]
             });
-            return reader.eachRow();
+            return reader.eachRow()
+            .then(() => {
+                throw new Error('Reader must throw error');
+            })
+            .catch((err) => {
+                expect(err).to.be.an('error');
+                expect(err.message).to.match(/Schema not found/);
+            });
         });
     });
 
