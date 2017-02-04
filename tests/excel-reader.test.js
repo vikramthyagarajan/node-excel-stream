@@ -226,7 +226,7 @@ describe('Excel Reader', () => {
                             key: 'name'
                         }, {
                             name: 'Z Value',
-                            key: 'x'
+                            key: 'z'
                         }, {
                             name: 'Total',
                             key: 'total'
@@ -269,7 +269,7 @@ describe('Excel Reader', () => {
                         z: 77,
                         total: 117
                     }, {
-                        name: 'Second Entry',
+                        name: 'Third Entry',
                         z: 51,
                         total: 76
                 }]
