@@ -19,7 +19,31 @@ describe('Excel Writer', () => {
         return fs.mkdir(tempDirectoryPath);
     });
 
-    describe('Something', () => {
+    describe('Metadata', () => {
+        it('should give error if no sheet key provided for a schema', () => {
+        });
+
+        it('should write headers even if no data is provided', () => {
+        });
+    });
+
+    describe('Data', () => {
+        it('should write data in some sheets', () => {
+        });
+
+        it('should write data in all sheets', () => {
+        });
+
+        it('should give error if sheet key is incorrect', () => {
+        });
+    });
+
+    describe('Debug', () => {
+        it('should not log anything when no debug option set', () => {
+        });
+
+        it('should log when debug options is set', () => {
+        });
     });
 
     after(() => {
