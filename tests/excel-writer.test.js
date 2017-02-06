@@ -12,13 +12,9 @@ describe('Excel Writer', () => {
         // before the tests here, we must create a temp directory, and write the excels there
         // When checking the excels is required, then a read stream is returned for that file
         // using these functions-
-        readWorkbooks.onlyHeaders = () => fs.createReadStream(tempDirectoryPath + '/only-headers.xlsx');
-        readWorkbooks.defaults = () => fs.createReadStream(tempDirectoryPath + '/defaults.xlsx');
-        // readWorkbooks.multiSheetNRowHeader = () => fs.createReadStream(tempDirectoryPath + '/2sheet-nheader.xlsx');
+        readWorkbooks.multiSheet = () => fs.createReadStream(tempDirectoryPath + '/multi-sheet.xlsx');
 
-        writeWorkbooks.onlyHeaders = () => fs.createReadStream(tempDirectoryPath + '/only-headers.xlsx');
-        writeWorkbooks.defaults = () => fs.createReadStream(tempDirectoryPath + '/defaults.xlsx');
-        // writeWorkbooks.multiSheetNRowHeader = () => fs.createReadStream(tempDirectoryPath + '/2sheet-nheader.xlsx');
+        writeWorkbooks.multiSheet = () => fs.createReadStream(tempDirectoryPath + '/multi-sheet.xlsx');
 
         return fs.mkdir(tempDirectoryPath);
     });
@@ -197,12 +193,137 @@ describe('Excel Writer', () => {
         });
 
         it('should write data in all sheets', () => {
+            let writer = new ExcelWriter({
+                sheets: [{
+                    name: 'Data',
+                    key: 'data',
+                    header: [{
+                        name: 'Sr No',
+                        key: 'index'
+                    }, {
+                        name: 'Name',
+                        key: 'name'
+                    }, {
+                        name: 'Test Value',
+                        key: 'value'
+                    }]
+                }, {
+                    name: 'Second Data',
+                    key: 'secondData',
+                    header: [{
+                        name: 'Sr No',
+                        key: 'index',
+                    }, {
+                        name: 'Name',
+                        key: 'name'
+                    }]
+                }]
+            });
+
+            let promises = [writer.addData('data', {index: 1, name: 'Test 1', value: 5}),
+                writer.addData('data', {index: 2, name: 'Test 2', value: 15}),
+                writer.addData('secondData', {index: 1, name: 'Test 21'}),
+            ];
+            return Promise.all(promises)
+            .then(() => {
+                return writer.save();
+            })
+            .then((stream) => {
+                let workbook = new Excel.Workbook();
+                stream.pipe(workbook.xlsx.createInputStream());
+                let sheet1 = workbook.getWorksheet('Data');
+                let sheet2 = workbook.getWorksheet('Second Data');
+                let firstOutput = [['Sr No', 'Name', 'Test Value'], [1, 'Test 1', 5], [2, 'Test 2', 15]];
+                let secondOutput = [['Sr No', 'Name'], [1, 'Test 21']];
+
+                expect(sheet1.actualRowCount).to.equal(1);
+                sheet1.eachRow((row, index) => {
+                    expect(row).to.equal(firstOutput[index]);
+                });
+                sheet2.eachRow((row, index) => {
+                    expect(row).to.equal(secondOutput[index]);
+                });
+            })
         });
 
         it('should give error if sheet key is incorrect', () => {
+            let writer = new ExcelWriter({
+                sheets: [{
+                    name: 'Data',
+                    key: 'data'
+                }]
+            });
+            return writer.addData('notExists', {})
+            .then(() => {
+                throw new Error('Writer must throw error');
+            })
+            .catch((err) => {
+                expect(err).to.be.an('error');
+                expect(err.message).to.match(/key is incorrect/);
+            });
         });
 
         it('should write the excel to a file', () => {
+            let writer = new ExcelWriter({
+                sheets: [{
+                    name: 'Data',
+                    key: 'data',
+                    header: [{
+                        name: 'Sr No',
+                        key: 'index'
+                    }, {
+                        name: 'Name',
+                        key: 'name'
+                    }, {
+                        name: 'Test Value',
+                        key: 'value'
+                    }]
+                }, {
+                    name: 'Second Data',
+                    key: 'secondData',
+                    header: [{
+                        name: 'Sr No',
+                        key: 'index',
+                    }, {
+                        name: 'Name',
+                        key: 'name'
+                    }]
+                }]
+            });
+
+            let promises = [writer.addData('data', {index: 1, name: 'Test 1', value: 5}),
+                writer.addData('data', {index: 2, name: 'Test 2', value: 15}),
+                writer.addData('secondData', {index: 1, name: 'Test 21'}),
+            ];
+            return Promise.all(promises)
+            .then(() => {
+                return writer.save();
+            })
+            .then((stream) => {
+                let writeStream = writeWorkbooks.multiSheet();
+                stream.pipe(writeStream);
+                return new Promise((resolve, reject) => {
+                    stream.on('finish', resolve);
+                    stream.on('error', reject);
+                });
+            })
+            .then(() => {
+                let workbook = new Excel.Workbook();
+                let stream = readWorkbooks.multiSheet();
+                stream.pipe(workbook.xlsx.createInputStream());
+                let sheet1 = workbook.getWorksheet('Data');
+                let sheet2 = workbook.getWorksheet('Second Data');
+                let firstOutput = [['Sr No', 'Name', 'Test Value'], [1, 'Test 1', 5], [2, 'Test 2', 15]];
+                let secondOutput = [['Sr No', 'Name'], [1, 'Test 21']];
+
+                expect(sheet1.actualRowCount).to.equal(1);
+                sheet1.eachRow((row, index) => {
+                    expect(row).to.equal(firstOutput[index]);
+                });
+                sheet2.eachRow((row, index) => {
+                    expect(row).to.equal(secondOutput[index]);
+                });
+            })
         });
     });
 
