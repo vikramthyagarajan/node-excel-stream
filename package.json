@@ -1,7 +1,7 @@
 {
   "name": "node-excel-stream",
   "version": "1.0.0",
-  "description": "A utility to help reading and writing excels using streams",
+  "description": "A utility to read and write excels JSON data in streams",
   "main": "index.js",
   "scripts": {
     "test": "mocha tests/**/**.js"
@@ -15,6 +15,7 @@
     "excel",
     "stream",
     "exceljs",
+    "json",
     "write",
     "read",
     "parse"
