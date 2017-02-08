@@ -7,6 +7,10 @@ const rm = require('rimraf');
 
 let readWorkbooks = {}, writeWorkbooks = {};
 let tempDirectoryPath = __dirname + '/temp';
+function cleanValues(arr) {
+    // row.values gives the first cell as null, so stripping that
+    return arr.slice(1);
+}
 describe('Excel Writer', () => {
     before(() => {
         // before the tests here, we must create a temp directory, and write the excels there
@@ -14,7 +18,7 @@ describe('Excel Writer', () => {
         // using these functions-
         readWorkbooks.multiSheet = () => fs.createReadStream(tempDirectoryPath + '/multi-sheet.xlsx');
 
-        writeWorkbooks.multiSheet = () => fs.createReadStream(tempDirectoryPath + '/multi-sheet.xlsx');
+        writeWorkbooks.multiSheet = () => fs.createWriteStream(tempDirectoryPath + '/multi-sheet.xlsx');
 
         return fs.mkdir(tempDirectoryPath);
     });
@@ -23,8 +27,7 @@ describe('Excel Writer', () => {
         it('should give error if no sheet key provided for a schema', () => {
             let writer = new ExcelWriter({
                 sheets: [{
-                    name: 'Data',
-                    key: 'data'
+                    name: 'Data'
                 }]
             });
             return writer.save()
@@ -33,7 +36,7 @@ describe('Excel Writer', () => {
             })
             .catch((err) => {
                 expect(err).to.be.an('error');
-                expect(err.message).to.match(/key is required/);
+                expect(err.message).to.match(/no key specified/i);
             });
         });
 
@@ -55,13 +58,15 @@ describe('Excel Writer', () => {
             .then((stream) => {
                 // getting the workbook stream
                 let workbook = new Excel.Workbook();
-                stream.pipe(workbook.xlsx.createInputStream());
-                let sheet = workbook.getWorksheet('Data');
-                let output = [['Sr No', 'Name']];
+                return workbook.xlsx.read(stream)
+                .then((workbook) => {
+                    let sheet = workbook.getWorksheet('Data');
+                    let output = [['Sr No', 'Name']];
 
-                expect(sheet.actualRowCount).to.equal(1);
-                worksheet.eachRow((row, index) => {
-                    expect(row).to.equal(row[index]);
+                    expect(sheet.actualRowCount).to.equal(1);
+                    sheet.eachRow((row, index) => {
+                        expect(cleanValues(row.values)).to.eql(output[index - 1]);
+                    });
                 });
             });
         });
@@ -73,7 +78,7 @@ describe('Excel Writer', () => {
                 sheets: [{
                     name: 'Data',
                     key: 'data',
-                    header: [{
+                    headers: [{
                         name: 'Sr No',
                         key: 'index'
                     }, {
@@ -92,13 +97,15 @@ describe('Excel Writer', () => {
             })
             .then((stream) => {
                 let workbook = new Excel.Workbook();
-                stream.pipe(workbook.xlsx.createInputStream());
-                let sheet = workbook.getWorksheet('Data');
-                let output = [['Sr No', 'Name', 'Test Value'], [1, '', 25]];
+                return workbook.xlsx.read(stream)
+                .then((workbook) => {
+                    let sheet = workbook.getWorksheet('Data');
+                    let output = [['Sr No', 'Name', 'Test Value'], [1, , 25]];
 
-                expect(sheet.actualRowCount).to.equal(1);
-                worksheet.eachRow((row, index) => {
-                    expect(row).to.equal(output[index]);
+                    expect(sheet.actualRowCount).to.equal(output.length);
+                    sheet.eachRow((row, index) => {
+                        expect(cleanValues(row.values)).to.eql(output[index - 1]);
+                    });
                 });
             })
         });
@@ -108,7 +115,7 @@ describe('Excel Writer', () => {
                 sheets: [{
                     name: 'Data',
                     key: 'data',
-                    header: [{
+                    headers: [{
                         name: 'Sr No',
                         key: 'index'
                     }, {
@@ -128,13 +135,15 @@ describe('Excel Writer', () => {
             })
             .then((stream) => {
                 let workbook = new Excel.Workbook();
-                stream.pipe(workbook.xlsx.createInputStream());
-                let sheet = workbook.getWorksheet('Data');
-                let output = [['Sr No', 'Name', 'Test Value'], [1, 'Unknown', 25]];
+                return workbook.xlsx.read(stream)
+                .then((workbook) => {
+                    let sheet = workbook.getWorksheet('Data');
+                    let output = [['Sr No', 'Name', 'Test Value'], [1, 'Unknown', 25]];
 
-                expect(sheet.actualRowCount).to.equal(1);
-                worksheet.eachRow((row, index) => {
-                    expect(row).to.equal(output[index]);
+                    expect(sheet.actualRowCount).to.equal(output.length);
+                    sheet.eachRow((row, index) => {
+                        expect(cleanValues(row.values)).to.eql(output[index - 1]);
+                    });
                 });
             })
         });
@@ -144,7 +153,7 @@ describe('Excel Writer', () => {
                 sheets: [{
                     name: 'Data',
                     key: 'data',
-                    header: [{
+                    headers: [{
                         name: 'Sr No',
                         key: 'index'
                     }, {
@@ -157,7 +166,7 @@ describe('Excel Writer', () => {
                 }, {
                     name: 'Second Data',
                     key: 'secondData',
-                    header: [{
+                    headers: [{
                         name: 'Sr No',
                         key: 'index',
                     }, {
@@ -176,18 +185,21 @@ describe('Excel Writer', () => {
             })
             .then((stream) => {
                 let workbook = new Excel.Workbook();
-                stream.pipe(workbook.xlsx.createInputStream());
-                let sheet1 = workbook.getWorksheet('Data');
-                let sheet2 = workbook.getWorksheet('Second Data');
-                let firstOutput = [['Sr No', 'Name', 'Test Value'], [1, 'Test 1', 5], [2, 'Test 2', 15]];
-                let secondOutput = [['Sr No', 'Name']];
+                return workbook.xlsx.read(stream)
+                .then((workbook) => {
+                    let sheet1 = workbook.getWorksheet('Data');
+                    let sheet2 = workbook.getWorksheet('Second Data');
+                    let firstOutput = [['Sr No', 'Name', 'Test Value'], [1, 'Test 1', 5], [2, 'Test 2', 15]];
+                    let secondOutput = [['Sr No', 'Name']];
 
-                expect(sheet1.actualRowCount).to.equal(1);
-                sheet1.eachRow((row, index) => {
-                    expect(row).to.equal(firstOutput[index]);
-                });
-                sheet2.eachRow((row, index) => {
-                    expect(row).to.equal(secondOutput[index]);
+                    expect(sheet1.actualRowCount).to.equal(firstOutput.length);
+                    expect(sheet2.actualRowCount).to.equal(secondOutput.length);
+                    sheet1.eachRow((row, index) => {
+                        expect(cleanValues(row.values)).to.eql(firstOutput[index - 1]);
+                    });
+                    sheet2.eachRow((row, index) => {
+                        expect(cleanValues(row.values)).to.eql(secondOutput[index - 1]);
+                    });
                 });
             })
         });
@@ -197,7 +209,7 @@ describe('Excel Writer', () => {
                 sheets: [{
                     name: 'Data',
                     key: 'data',
-                    header: [{
+                    headers: [{
                         name: 'Sr No',
                         key: 'index'
                     }, {
@@ -210,7 +222,7 @@ describe('Excel Writer', () => {
                 }, {
                     name: 'Second Data',
                     key: 'secondData',
-                    header: [{
+                    headers: [{
                         name: 'Sr No',
                         key: 'index',
                     }, {
@@ -230,18 +242,21 @@ describe('Excel Writer', () => {
             })
             .then((stream) => {
                 let workbook = new Excel.Workbook();
-                stream.pipe(workbook.xlsx.createInputStream());
-                let sheet1 = workbook.getWorksheet('Data');
-                let sheet2 = workbook.getWorksheet('Second Data');
-                let firstOutput = [['Sr No', 'Name', 'Test Value'], [1, 'Test 1', 5], [2, 'Test 2', 15]];
-                let secondOutput = [['Sr No', 'Name'], [1, 'Test 21']];
+                return workbook.xlsx.read(stream)
+                .then((workbook) => {
+                    let sheet1 = workbook.getWorksheet('Data');
+                    let sheet2 = workbook.getWorksheet('Second Data');
+                    let firstOutput = [['Sr No', 'Name', 'Test Value'], [1, 'Test 1', 5], [2, 'Test 2', 15]];
+                    let secondOutput = [['Sr No', 'Name'], [1, 'Test 21']];
 
-                expect(sheet1.actualRowCount).to.equal(1);
-                sheet1.eachRow((row, index) => {
-                    expect(row).to.equal(firstOutput[index]);
-                });
-                sheet2.eachRow((row, index) => {
-                    expect(row).to.equal(secondOutput[index]);
+                    expect(sheet1.actualRowCount).to.equal(firstOutput.length);
+                    expect(sheet2.actualRowCount).to.equal(secondOutput.length);
+                    sheet1.eachRow((row, index) => {
+                        expect(cleanValues(row.values)).to.eql(firstOutput[index - 1]);
+                    });
+                    sheet2.eachRow((row, index) => {
+                        expect(cleanValues(row.values)).to.eql(secondOutput[index - 1]);
+                    });
                 });
             })
         });
@@ -259,7 +274,7 @@ describe('Excel Writer', () => {
             })
             .catch((err) => {
                 expect(err).to.be.an('error');
-                expect(err.message).to.match(/key is incorrect/);
+                expect(err.message).to.match(/no such sheet key/i);
             });
         });
 
@@ -268,7 +283,7 @@ describe('Excel Writer', () => {
                 sheets: [{
                     name: 'Data',
                     key: 'data',
-                    header: [{
+                    headers: [{
                         name: 'Sr No',
                         key: 'index'
                     }, {
@@ -281,7 +296,7 @@ describe('Excel Writer', () => {
                 }, {
                     name: 'Second Data',
                     key: 'secondData',
-                    header: [{
+                    headers: [{
                         name: 'Sr No',
                         key: 'index',
                     }, {
@@ -303,25 +318,28 @@ describe('Excel Writer', () => {
                 let writeStream = writeWorkbooks.multiSheet();
                 stream.pipe(writeStream);
                 return new Promise((resolve, reject) => {
-                    stream.on('finish', resolve);
-                    stream.on('error', reject);
+                    writeStream.on('finish', resolve);
+                    writeStream.on('error', reject);
                 });
             })
             .then(() => {
                 let workbook = new Excel.Workbook();
                 let stream = readWorkbooks.multiSheet();
-                stream.pipe(workbook.xlsx.createInputStream());
-                let sheet1 = workbook.getWorksheet('Data');
-                let sheet2 = workbook.getWorksheet('Second Data');
-                let firstOutput = [['Sr No', 'Name', 'Test Value'], [1, 'Test 1', 5], [2, 'Test 2', 15]];
-                let secondOutput = [['Sr No', 'Name'], [1, 'Test 21']];
+                return workbook.xlsx.read(stream)
+                .then((workbook) => {
+                    let sheet1 = workbook.getWorksheet('Data');
+                    let sheet2 = workbook.getWorksheet('Second Data');
+                    let firstOutput = [['Sr No', 'Name', 'Test Value'], [1, 'Test 1', 5], [2, 'Test 2', 15]];
+                    let secondOutput = [['Sr No', 'Name'], [1, 'Test 21']];
 
-                expect(sheet1.actualRowCount).to.equal(1);
-                sheet1.eachRow((row, index) => {
-                    expect(row).to.equal(firstOutput[index]);
-                });
-                sheet2.eachRow((row, index) => {
-                    expect(row).to.equal(secondOutput[index]);
+                    expect(sheet1.actualRowCount).to.equal(firstOutput.length);
+                    expect(sheet2.actualRowCount).to.equal(secondOutput.length);
+                    sheet1.eachRow((row, index) => {
+                        expect(cleanValues(row.values)).to.eql(firstOutput[index - 1]);
+                    });
+                    sheet2.eachRow((row, index) => {
+                        expect(cleanValues(row.values)).to.eql(secondOutput[index - 1]);
+                    });
                 });
             })
         });
