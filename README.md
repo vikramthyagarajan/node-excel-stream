@@ -1,4 +1,4 @@
-# node-excel-stream
+# node-excel-stream [![npm version](https://badge.fury.io/js/node-excel-stream.svg)](https://badge.fury.io/js/node-excel-stream) [![Build Status](https://travis-ci.org/vikramthyagarajan/node-excel-stream.svg?branch=master)](https://travis-ci.org/vikramthyagarajan/node-excel-stream)
 A utility to read and write excels using streams in Node
 
 This package provides ExcelWriter and ExcelReader classes that can be used to writer and parse excel respectively
