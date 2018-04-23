@@ -80,7 +80,7 @@ class ExcelWriter {
 				if (header.default !== undefined && header.default !== null) {
 					defaultValue = header.default;
 				}
-				if (dataObj[header.key]) {
+				if ( dataObj.hasOwnProperty(header.key)) {
 					rowData[index] = dataObj[header.key];
 				}
 				else rowData[index] = defaultValue;
