@@ -66,6 +66,8 @@ starting parse
 finished parse
 ```
 
+NOTE: A list of types that can be passed can be found on the [Exceljs](https://github.com/guyonroche/exceljs) project
+
 ### Writing Workbooks
 Workbooks must be given a schema for each sheet before it can be written to. Data is then added to the workbook in the form of json. All this data is saved to the sheet using the save function, which returns a promise which resolves the stream. This stream can then be piped or written to the fileSystem using the fs module.
 
@@ -116,3 +118,30 @@ Input: data.xlsx, Sheet: Test Sheet
 | Test 1 | 100 |
 | Test 2 | 0 |
 | Test 3 | 80 |
+
+
+## Configuration
+
+### Reading
+node-excel-stream takes a schema to strictly check the excel format while reading. This makes sure that the excel contains data in the correct format, and throws errors when there is a mismatch.
+
+Configuration options -
+```
+{
+    sheets: [{
+        name: 'Users',              // The name of the sheet. Required
+        key: 'users',               // The key of the sheet. Optional. Used to identify the sheet while getting the row data
+        rows: {
+            headerRow: 1,           // The row that contains the headers. Rows above this are ignored. Default: 1
+            allowedHeaders: [{
+                name: 'User Name',  // The text value of the header cell
+                key: 'userName',    // The identifier for the header. Will be the field name in the row data json
+                type: String        // The type, for strict type checking for the data
+            }]
+        }
+    }]
+}
+```
+
+## Contributing
+PRs are always welcome. Thank you to all contributors :)
