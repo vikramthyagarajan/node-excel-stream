@@ -1,6 +1,6 @@
 {
   "name": "node-excel-stream",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A utility to read and write excels JSON data in streams",
   "main": "index.js",
   "scripts": {
