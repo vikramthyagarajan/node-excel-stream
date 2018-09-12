@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "bluebird": "^3.4.7",
-    "exceljs": "^0.2.39",
+    "exceljs": "^1.6.2",
     "joi": "^10.2.0",
     "lodash": "^4.17.4"
   }
