@@ -36,7 +36,7 @@ class ExcelReader {
 		});
 	}
 
-    /** 
+    /**
      * Checks if options are of valid type and schema
      */
     _validateOptions() {
@@ -89,7 +89,7 @@ class ExcelReader {
 		}
 	}
 
-    /** 
+    /**
      * Checks a worksheet against its schema to make sure sheet is valid
      */
     _checkSheet(worksheet, sheetOptions) {
@@ -115,14 +115,14 @@ class ExcelReader {
         };
     }
 
-    /** 
+    /**
      * Error that is cause because of incorrect data is inputted to the class
      */
 	_dataError(message) {
 		return new Error(message);
 	}
 
-    /** 
+    /**
      * Error that is caused by the class itself, and is not related to the
      * options provided by the user
      */
@@ -139,7 +139,7 @@ class ExcelReader {
 
 	/**
 	 * Returns a json version of the row data, based on the
-	 * allowedHeaders of the given sheet. 
+	 * allowedHeaders of the given sheet.
 	 */
 	_getRowData(rowObject, rowNum, allowedHeaders, headerRowValues) {
 		let result = {};
@@ -155,7 +155,7 @@ class ExcelReader {
                 if (_.isObject(cell.value)) {
                     // If this is an object, then a formula has been applied
                     // We just take the result in that case
-                    cellValue = cell.value.result;
+                    cellValue = _.get(cell, 'value.result', _.get(cell, 'value'));
                 }
 				result[currentHeader.key] = cellValue;
 			}

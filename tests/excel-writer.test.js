@@ -20,7 +20,7 @@ describe('Excel Writer', () => {
 
         writeWorkbooks.multiSheet = () => fs.createWriteStream(tempDirectoryPath + '/multi-sheet.xlsx');
 
-        return fs.mkdir(tempDirectoryPath);
+        return fs.mkdir(tempDirectoryPath, () => {});
     });
 
     describe('Metadata', () => {
@@ -358,7 +358,7 @@ describe('Excel Writer', () => {
             return rm(tempDirectoryPath, (err) => {
                 if (err)
                     reject(err);
-                else 
+                else
                     resolve();
             });
         });
