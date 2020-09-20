@@ -155,7 +155,11 @@ class ExcelReader {
                 if (_.isObject(cell.value)) {
                     // If this is an object, then a formula has been applied
                     // We just take the result in that case
-                    cellValue = _.get(cell, 'value.result', _.get(cell, 'value'));
+                    if(cell.hyperlink){
+                        cellValue = _.get(cell, 'value.text', _.get(cell, 'value'));
+                    } else {
+                        cellValue = _.get(cell, 'value.result', _.get(cell, 'value'));
+                    }
                 }
 				result[currentHeader.key] = cellValue;
 			}
