@@ -96,10 +96,10 @@ let writer = new ExcelWriter({
         }]
     }]
 });
-let dataPromises = inputs.map((input) => {
+let dataPromises = inputs.map(async input => {
     // 'tests' is the key of the sheet. That is used
     // to add data to only the Test Sheet
-    writer.addData('tests', input);
+    return await writer.addData('tests', input);
 });
 Promise.all(dataPromises)
 .then(() => {
